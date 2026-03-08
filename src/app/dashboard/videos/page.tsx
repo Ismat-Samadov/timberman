@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { db, videos, topics } from '@/lib/db/schema';
 import { desc, eq } from 'drizzle-orm';
 import { formatDistanceToNow, format } from 'date-fns';

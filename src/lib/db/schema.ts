@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import {
-  pgTable,
+  pgSchema,
   text,
   timestamp,
   uuid,
@@ -10,15 +10,18 @@ import {
   pgEnum,
 } from 'drizzle-orm/pg-core';
 
-// Enums
-export const topicStatusEnum = pgEnum('topic_status', [
+// Use shortgen schema — all tables live in shortgen, not public
+export const shortgen = pgSchema('shortgen');
+
+// Enums (must be in the same schema)
+export const topicStatusEnum = shortgen.enum('topic_status', [
   'queued',
   'processing',
   'used',
   'skipped',
 ]);
 
-export const videoStatusEnum = pgEnum('video_status', [
+export const videoStatusEnum = shortgen.enum('video_status', [
   'pending',
   'generating',
   'uploading',
@@ -27,7 +30,7 @@ export const videoStatusEnum = pgEnum('video_status', [
 ]);
 
 // Topics table
-export const topics = pgTable('topics', {
+export const topics = shortgen.table('topics', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: text('title').notNull(),
   description: text('description'),
@@ -40,7 +43,7 @@ export const topics = pgTable('topics', {
 });
 
 // Videos table
-export const videos = pgTable('videos', {
+export const videos = shortgen.table('videos', {
   id: uuid('id').primaryKey().defaultRandom(),
   topic_id: uuid('topic_id').references(() => topics.id),
   title: text('title'),
@@ -58,7 +61,7 @@ export const videos = pgTable('videos', {
 });
 
 // Settings table
-export const settings = pgTable('settings', {
+export const settings = shortgen.table('settings', {
   key: text('key').primaryKey(),
   value: text('value').notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull(),
