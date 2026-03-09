@@ -244,17 +244,22 @@ def step_report(
     if youtube_id and youtube_id != "dry_run_id":
         yt_url = f"https://www.youtube.com/shorts/{youtube_id}"
 
-    payload = {
+    payload: dict = {
         "topic_id": topic.id,
-        "title": script["title"] if script else None,
-        "script": script["script"] if script else None,
-        "youtube_url": yt_url,
-        "youtube_id": youtube_id,
-        "r2_key": r2_key,
         "duration_seconds": duration,
         "status": status,
-        "error_message": error,
     }
+    if script:
+        payload["title"] = script["title"]
+        payload["script"] = script["script"]
+    if yt_url:
+        payload["youtube_url"] = yt_url
+    if youtube_id:
+        payload["youtube_id"] = youtube_id
+    if r2_key:
+        payload["r2_key"] = r2_key
+    if error:
+        payload["error_message"] = error
 
     try:
         resp = requests.post(

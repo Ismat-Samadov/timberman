@@ -9,15 +9,15 @@ import { z } from 'zod';
 
 const completeSchema = z.object({
   topic_id: z.string().uuid(),
-  title: z.string().optional(),
-  script: z.string().optional(),
-  youtube_url: z.string().url().optional(),
-  youtube_id: z.string().optional(),
-  r2_key: z.string().optional(),
-  thumbnail_r2_key: z.string().optional(),
-  duration_seconds: z.number().int().optional(),
+  title: z.string().nullish(),
+  script: z.string().nullish(),
+  youtube_url: z.string().url().nullish(),
+  youtube_id: z.string().nullish(),
+  r2_key: z.string().nullish(),
+  thumbnail_r2_key: z.string().nullish(),
+  duration_seconds: z.number().int().nullish(),
   status: z.enum(['published', 'failed']),
-  error_message: z.string().optional(),
+  error_message: z.string().nullish(),
 });
 
 export async function POST(req: NextRequest) {
