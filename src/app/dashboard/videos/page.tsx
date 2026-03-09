@@ -5,7 +5,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import StatusBadge from '../../components/StatusBadge';
 import {
   ExternalLink, Clock, Film, AlertCircle, DollarSign,
-  RefreshCw, Eye, ThumbsUp, MessageCircle, Users,
+  RefreshCw, Eye, ThumbsUp, MessageCircle, Users, Pencil, Check, X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -50,37 +50,143 @@ interface CostMeta {
   kling?: { cost_usd?: number; clips?: number };
 }
 
-function CostCell({ metadata }: { metadata: Record<string, unknown> | null }) {
+function CostCell({
+  videoId,
+  metadata,
+  onSaved,
+}: {
+  videoId: string;
+  metadata: Record<string, unknown> | null;
+  onSaved: (updated: Record<string, unknown>) => void;
+}) {
   const cost = metadata as CostMeta | null;
-  if (!cost?.total_usd) return <span className="text-xs text-zinc-700">—</span>;
-  return (
-    <div className="group relative inline-block">
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-400 cursor-default">
-        <DollarSign className="w-3 h-3" />
-        {cost.total_usd.toFixed(2)}
-      </span>
-      <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block z-10 w-44">
-        <div className="rounded-lg p-2.5 text-[10px] space-y-1 shadow-xl" style={{ background: '#18181b', border: '1px solid #27272a' }}>
-          <div className="flex justify-between text-zinc-400">
-            <span>Claude</span><span>${cost.claude?.cost_usd?.toFixed(4) ?? '—'}</span>
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [fields, setFields] = useState({
+    total: '',
+    claude: '',
+    elevenlabs: '',
+    kling: '',
+  });
+
+  function openEditor() {
+    setFields({
+      total:      String(cost?.total_usd ?? ''),
+      claude:     String(cost?.claude?.cost_usd ?? ''),
+      elevenlabs: String(cost?.elevenlabs?.cost_usd ?? ''),
+      kling:      String(cost?.kling?.cost_usd ?? ''),
+    });
+    setEditing(true);
+  }
+
+  async function save() {
+    const total = parseFloat(fields.total);
+    if (isNaN(total) || total < 0) return;
+    setSaving(true);
+    try {
+      const costPayload: CostMeta = {
+        total_usd: total,
+        claude:     { cost_usd: parseFloat(fields.claude) || 0, ...(cost?.claude ?? {}) },
+        elevenlabs: { cost_usd: parseFloat(fields.elevenlabs) || 0, ...(cost?.elevenlabs ?? {}) },
+        kling:      { cost_usd: parseFloat(fields.kling) || 0, ...(cost?.kling ?? {}) },
+      };
+      const res = await fetch(`/api/videos/${videoId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cost: costPayload }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        onSaved(updated.metadata);
+        setEditing(false);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <div className="flex flex-col gap-1.5 py-1 min-w-[130px]">
+        {[
+          { label: 'Total', key: 'total' as const },
+          { label: 'Claude', key: 'claude' as const },
+          { label: 'ElevenLabs', key: 'elevenlabs' as const },
+          { label: 'Kling', key: 'kling' as const },
+        ].map(({ label, key }) => (
+          <div key={key} className="flex items-center gap-1">
+            <span className="text-[9px] text-zinc-600 w-16 flex-shrink-0">{label}</span>
+            <input
+              type="number"
+              step="0.0001"
+              min="0"
+              value={fields[key]}
+              onChange={(e) => setFields((p) => ({ ...p, [key]: e.target.value }))}
+              className="w-full text-[11px] rounded px-1.5 py-0.5 bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-violet-500"
+            />
           </div>
-          {cost.claude?.input_tokens && (
-            <div className="text-zinc-600 pl-2">{cost.claude.input_tokens}↑ / {cost.claude.output_tokens}↓ tok</div>
-          )}
-          <div className="flex justify-between text-zinc-400">
-            <span>ElevenLabs</span><span>${cost.elevenlabs?.cost_usd?.toFixed(4) ?? '—'}</span>
-          </div>
-          {cost.elevenlabs?.chars && (
-            <div className="text-zinc-600 pl-2">{cost.elevenlabs.chars} chars</div>
-          )}
-          <div className="flex justify-between text-zinc-400">
-            <span>Kling ({cost.kling?.clips ?? 0} clips)</span><span>${cost.kling?.cost_usd?.toFixed(4) ?? '—'}</span>
-          </div>
-          <div className="flex justify-between text-zinc-200 font-semibold border-t pt-1" style={{ borderColor: '#27272a' }}>
-            <span>Total</span><span>${cost.total_usd.toFixed(4)}</span>
-          </div>
+        ))}
+        <div className="flex items-center gap-1 mt-0.5">
+          <button
+            onClick={save}
+            disabled={saving}
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium text-white bg-violet-600 hover:bg-violet-500 disabled:opacity-50 transition-colors"
+          >
+            {saving ? <RefreshCw className="w-2.5 h-2.5 animate-spin-slow" /> : <Check className="w-2.5 h-2.5" />}
+            Save
+          </button>
+          <button
+            onClick={() => setEditing(false)}
+            className="p-0.5 text-zinc-600 hover:text-zinc-300 transition-colors"
+          >
+            <X className="w-3 h-3" />
+          </button>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="group/cost relative inline-flex items-center gap-1.5">
+      {cost?.total_usd ? (
+        <div className="group relative inline-block">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-400 cursor-default">
+            <DollarSign className="w-3 h-3" />
+            {cost.total_usd.toFixed(2)}
+          </span>
+          <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block z-10 w-44">
+            <div className="rounded-lg p-2.5 text-[10px] space-y-1 shadow-xl" style={{ background: '#18181b', border: '1px solid #27272a' }}>
+              <div className="flex justify-between text-zinc-400">
+                <span>Claude</span><span>${cost.claude?.cost_usd?.toFixed(4) ?? '—'}</span>
+              </div>
+              {cost.claude?.input_tokens && (
+                <div className="text-zinc-600 pl-2">{cost.claude.input_tokens}↑ / {cost.claude.output_tokens}↓ tok</div>
+              )}
+              <div className="flex justify-between text-zinc-400">
+                <span>ElevenLabs</span><span>${cost.elevenlabs?.cost_usd?.toFixed(4) ?? '—'}</span>
+              </div>
+              {cost.elevenlabs?.chars && (
+                <div className="text-zinc-600 pl-2">{cost.elevenlabs.chars} chars</div>
+              )}
+              <div className="flex justify-between text-zinc-400">
+                <span>Kling ({cost.kling?.clips ?? 0} clips)</span><span>${cost.kling?.cost_usd?.toFixed(4) ?? '—'}</span>
+              </div>
+              <div className="flex justify-between text-zinc-200 font-semibold border-t pt-1" style={{ borderColor: '#27272a' }}>
+                <span>Total</span><span>${cost.total_usd.toFixed(4)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <span className="text-xs text-zinc-700">—</span>
+      )}
+      <button
+        onClick={openEditor}
+        className="opacity-0 group-hover/cost:opacity-100 p-0.5 text-zinc-700 hover:text-violet-400 transition-all rounded"
+        title="Edit cost"
+      >
+        <Pencil className="w-2.5 h-2.5" />
+      </button>
     </div>
   );
 }
@@ -306,7 +412,15 @@ export default function VideosPage() {
                     </span>
                   </td>
                   {/* Cost */}
-                  <td className="px-5 py-3.5"><CostCell metadata={video.metadata} /></td>
+                  <td className="px-5 py-3.5">
+                    <CostCell
+                      videoId={video.id}
+                      metadata={video.metadata}
+                      onSaved={(updated) =>
+                        setVideos((prev) => prev.map((v) => v.id === video.id ? { ...v, metadata: updated } : v))
+                      }
+                    />
+                  </td>
                   {/* Engagement */}
                   <td className="px-5 py-3.5"><EngagementCell metadata={video.metadata} /></td>
                   {/* YouTube */}
