@@ -76,16 +76,19 @@ def generate_script(
     niche: str | None,
     keywords: list[str],
     tone: str = "educational",
+    duration_target: int = 55,
 ) -> dict:
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
     tone_note = TONE_INSTRUCTIONS.get(tone, TONE_INSTRUCTIONS["educational"])
+    word_target = int(duration_target * 2.7)  # ~2.7 words/second at natural pace
 
     user_prompt = f"""Topic: {topic_title}
 Niche: {niche or "general"}
 Tone: {tone} — {tone_note}
 Keywords: {", ".join(keywords) if keywords else "none"}
 Context: {topic_description or "none"}
+Target duration: {duration_target}s (~{word_target} words)
 
 Write the script now. Return only valid JSON."""
 

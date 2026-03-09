@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, videos, topics } from '@/lib/db/schema';
+import { db, videos, topics, settings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { validatePipelineKey } from '@/lib/auth';
 import { sendVideoPublished, sendPipelineError } from '@/lib/telegram';
@@ -74,29 +74,36 @@ export async function POST(req: NextRequest) {
       .set({ status: topicStatus, updated_at: new Date() })
       .where(eq(topics.id, topic_id));
 
-    // Fetch topic for additional context in notifications
-    const [topicRow] = await db.select().from(topics).where(eq(topics.id, topic_id));
+    // Fetch topic + notification settings in parallel
+    const [[topicRow], settingRows] = await Promise.all([
+      db.select().from(topics).where(eq(topics.id, topic_id)),
+      db.select().from(settings),
+    ]);
 
-    // Send notifications (Telegram + Email) in parallel — failures are non-fatal
+    const cfg: Record<string, string> = {};
+    settingRows.forEach((r) => { cfg[r.key] = r.value; });
+    const flag = (key: string, fallback = 'true') => (cfg[key] ?? fallback) === 'true';
+
+    // Send notifications gated on dashboard toggles — failures are non-fatal
     if (status === 'published' && youtube_url && title) {
       const thumbnailUrl = thumbnail_r2_key ? getR2Url(thumbnail_r2_key) : undefined;
-      await Promise.allSettled([
-        sendVideoPublished(title, youtube_url, thumbnailUrl),
-        sendVideoPublishedEmail(title, youtube_url, duration_seconds, topicRow?.niche ?? undefined),
-      ]).then((results) =>
-        results.forEach((r) => {
-          if (r.status === 'rejected') console.error('[Notify] Error:', r.reason);
-        })
-      );
+      const notifs: Promise<unknown>[] = [];
+      if (flag('notify_on_success')) notifs.push(sendVideoPublished(title, youtube_url, thumbnailUrl));
+      if (flag('email_on_publish')) notifs.push(sendVideoPublishedEmail(title, youtube_url, duration_seconds, topicRow?.niche ?? undefined));
+      if (notifs.length) {
+        await Promise.allSettled(notifs).then((results) =>
+          results.forEach((r) => { if (r.status === 'rejected') console.error('[Notify] Error:', r.reason); })
+        );
+      }
     } else if (status === 'failed' && error_message) {
-      await Promise.allSettled([
-        sendPipelineError('video-pipeline', error_message),
-        sendPipelineErrorEmail('video-pipeline', error_message, topicRow?.title ?? undefined),
-      ]).then((results) =>
-        results.forEach((r) => {
-          if (r.status === 'rejected') console.error('[Notify] Error:', r.reason);
-        })
-      );
+      const notifs: Promise<unknown>[] = [];
+      if (flag('notify_on_failure')) notifs.push(sendPipelineError('video-pipeline', error_message));
+      if (flag('email_on_failure')) notifs.push(sendPipelineErrorEmail('video-pipeline', error_message, topicRow?.title ?? undefined));
+      if (notifs.length) {
+        await Promise.allSettled(notifs).then((results) =>
+          results.forEach((r) => { if (r.status === 'rejected') console.error('[Notify] Error:', r.reason); })
+        );
+      }
     }
 
     return NextResponse.json(video, { status: 201 });

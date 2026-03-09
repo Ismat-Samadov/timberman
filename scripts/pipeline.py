@@ -135,13 +135,15 @@ def step_fetch_topic() -> Topic:
 def step_generate_script(topic: Topic) -> dict:
     tone = CONFIG.get("script_tone", "educational")
     niche = topic.niche or CONFIG.get("default_niche", "Technology")
-    _log("2/8", f"Generating viral script (Claude claude-sonnet-4-6) tone={tone}")
+    duration_target = int(CONFIG.get("video_duration_target", "55"))
+    _log("2/8", f"Generating viral script (Claude claude-sonnet-4-6) tone={tone} target={duration_target}s")
     return generate_script(
         topic_title=topic.title,
         topic_description=topic.description,
         niche=niche,
         keywords=topic.keywords,
         tone=tone,
+        duration_target=duration_target,
     )
 
 
@@ -183,14 +185,15 @@ def step_assemble(
     word_timestamps: list[dict],
     bg_music_path: Optional[str],
     work_dir: str,
+    captions_enabled: bool = True,
 ) -> str:
-    _log("5/8", "Assembling final video (FFmpeg)")
+    _log("5/8", f"Assembling final video (FFmpeg) captions={'on' if captions_enabled else 'off'}")
     output_path = str(Path(work_dir) / "final.mp4")
     assemble_video(
         clip_paths=clip_paths,
         audio_path=audio_path,
         output_path=output_path,
-        word_timestamps=word_timestamps,
+        word_timestamps=word_timestamps if captions_enabled else [],
         bg_music_path=bg_music_path,
     )
     return output_path
@@ -305,6 +308,11 @@ def main() -> None:
     print(f"Config: visibility={CONFIG.get('youtube_visibility')} | category={CONFIG.get('youtube_category_id')} | tone={CONFIG.get('script_tone')}")
     print("=" * 60)
 
+    # Respect the dashboard's schedule_enabled toggle
+    if CONFIG.get("schedule_enabled", "true").lower() == "false" and not DRY_RUN:
+        print("\n[Pipeline] Auto-publish is disabled in dashboard settings. Exiting.")
+        sys.exit(0)
+
     topic: Optional[Topic] = None
     script: Optional[dict] = None
     work_dir: Optional[str] = None
@@ -332,7 +340,8 @@ def main() -> None:
         bg_music = step_fetch_bg_music(work_dir)
 
         current_step = "assemble"
-        video_path = step_assemble(clip_paths, audio_path, word_timestamps, bg_music, work_dir)
+        captions_enabled = CONFIG.get("captions_enabled", "true").lower() == "true"
+        video_path = step_assemble(clip_paths, audio_path, word_timestamps, bg_music, work_dir, captions_enabled=captions_enabled)
 
         current_step = "upload-r2"
         r2_key, _ = step_upload_r2(video_path, topic.id)
