@@ -133,6 +133,7 @@ export default function TopicsPage() {
       )}
 
       {/* Filter tabs */}
+      <div className="overflow-x-auto">
       <div
         className="flex items-center gap-1 p-1 rounded-lg w-fit"
         style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
@@ -151,6 +152,7 @@ export default function TopicsPage() {
             {label}
           </button>
         ))}
+      </div>
       </div>
 
       {/* Topics list */}
