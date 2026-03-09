@@ -9,11 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth';
 import { uploadToR2 } from '@/lib/r2';
 
-export const config = {
-  api: { bodyParser: false },
-};
-
-// Allow up to 500 MB for video uploads
+// Allow up to 60 s for large video uploads (Vercel Pro / self-hosted)
 export const maxDuration = 60;
 
 function guessContentType(filename: string): string {
