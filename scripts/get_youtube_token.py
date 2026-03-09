@@ -14,7 +14,10 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 
 
-SCOPES = "https://www.googleapis.com/auth/youtube.upload"
+SCOPES = " ".join([
+    "https://www.googleapis.com/auth/youtube.upload",
+    "https://www.googleapis.com/auth/youtube.readonly",
+])
 REDIRECT_PORT = 8080
 REDIRECT_URI = f"http://localhost:{REDIRECT_PORT}"
 
