@@ -281,7 +281,7 @@ export default function VideosPage() {
                   {/* Title */}
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
-                      <VideoThumb status={video.status} />
+                      <VideoThumb status={video.status as string} />
                       <div className="min-w-0">
                         <div className="text-sm font-medium text-zinc-200 truncate max-w-[200px]">
                           {video.title ?? 'Untitled'}
@@ -299,7 +299,7 @@ export default function VideosPage() {
                     </div>
                   </td>
                   {/* Status */}
-                  <td className="px-5 py-3.5"><StatusBadge status={video.status} /></td>
+                  <td className="px-5 py-3.5"><StatusBadge status={video.status as Parameters<typeof StatusBadge>[0]['status']} /></td>
                   {/* Duration */}
                   <td className="px-5 py-3.5">
                     <span className="inline-flex items-center gap-1 text-xs text-zinc-500">
