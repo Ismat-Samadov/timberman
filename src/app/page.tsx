@@ -306,23 +306,74 @@ export default function LandingPage() {
       {/* ── Tech stack ── */}
       <section className="px-6 sm:px-10 pb-24">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="text-[11px] font-bold uppercase tracking-widest text-zinc-600 mb-2">Powered by</div>
-            <h2 className="text-xl font-bold text-zinc-300">Best-in-class AI stack</h2>
+          <div className="text-center mb-10">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-zinc-600 mb-2">Integrations</div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-zinc-100">
+              {totalTools} tools, one pipeline
+            </h2>
+            <p className="text-zinc-500 text-sm mt-3 max-w-xl mx-auto">
+              Every service is best-in-class for its job. Click any tool to learn more.
+            </p>
           </div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {stack.map(({ label, color }) => (
-              <span key={label}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium border"
-                style={{
-                  background: `${color}0d`,
-                  borderColor: `${color}28`,
-                  color,
-                }}>
-                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color }} />
-                {label}
-              </span>
+
+          {/* Integration count bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
+            {[
+              { value: `${totalTools}`, label: 'Integrations', color: '#a78bfa' },
+              { value: '5',            label: 'AI services',   color: '#34d399' },
+              { value: '0',            label: 'Manual steps',  color: '#f87171' },
+              { value: '8',            label: 'Pipeline steps', color: '#fbbf24' },
+            ].map(({ value, label, color }) => (
+              <div key={label} className="rounded-xl p-4 text-center border"
+                style={{ background: `${color}08`, borderColor: `${color}20` }}>
+                <div className="text-2xl font-bold mb-0.5" style={{ color }}>{value}</div>
+                <div className="text-[11px] text-zinc-500 font-medium">{label}</div>
+              </div>
             ))}
+          </div>
+
+          {/* Grouped tech stack */}
+          <div className="space-y-5">
+            {stackGroups.map((group) => (
+              <div key={group.label} className="rounded-2xl p-5 border"
+                style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: group.color }} />
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">{group.label}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {group.items.map(({ label, href, color }) => (
+                    <a key={label} href={href} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium border transition-all hover:scale-105 hover:brightness-110"
+                      style={{ background: `${color}0d`, borderColor: `${color}28`, color }}>
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color }} />
+                      {label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Time saving callout */}
+          <div className="mt-6 rounded-2xl p-5 border flex flex-col sm:flex-row items-center gap-4"
+            style={{ background: 'rgba(139,92,246,0.06)', borderColor: 'rgba(139,92,246,0.2)' }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)' }}>
+              <Clock className="w-4 h-4 text-violet-400" />
+            </div>
+            <div className="text-center sm:text-left">
+              <div className="text-sm font-semibold text-zinc-200">
+                Creating a Short manually takes ~3.5 hours. This pipeline takes 8 minutes.
+              </div>
+              <div className="text-xs text-zinc-500 mt-0.5">
+                Script (30 min) + voiceover (20 min) + clips (60 min) + edit (45 min) + captions (30 min) + upload (15 min) = 200 min saved per video.
+              </div>
+            </div>
+            <div className="flex-shrink-0 text-center sm:ml-auto">
+              <div className="text-2xl font-bold text-violet-400">25×</div>
+              <div className="text-[10px] text-zinc-600 uppercase tracking-wider font-medium">faster</div>
+            </div>
           </div>
         </div>
       </section>
