@@ -75,7 +75,8 @@ def fetch_pipeline_config() -> dict:
         "youtube_visibility": "public",
         "youtube_category_id": "28",
         "youtube_made_for_kids": "false",
-        "video_duration_target": "55",
+        "video_duration_target": "30",
+        "max_clips": "3",
         "script_tone": "educational",
         "default_niche": "Technology",
         "elevenlabs_voice_id": "",
@@ -135,8 +136,9 @@ def step_fetch_topic() -> Topic:
 def step_generate_script(topic: Topic) -> dict:
     tone = CONFIG.get("script_tone", "educational")
     niche = topic.niche or CONFIG.get("default_niche", "Technology")
-    duration_target = int(CONFIG.get("video_duration_target", "55"))
-    _log("2/8", f"Generating viral script (Claude claude-sonnet-4-6) tone={tone} target={duration_target}s")
+    duration_target = int(CONFIG.get("video_duration_target", "30"))
+    max_clips = int(CONFIG.get("max_clips", "3"))
+    _log("2/8", f"Generating viral script (Claude claude-sonnet-4-6) tone={tone} target={duration_target}s max_clips={max_clips}")
     return generate_script(
         topic_title=topic.title,
         topic_description=topic.description,
@@ -144,6 +146,7 @@ def step_generate_script(topic: Topic) -> dict:
         keywords=topic.keywords,
         tone=tone,
         duration_target=duration_target,
+        max_segments=max_clips,
     )
 
 
@@ -329,6 +332,10 @@ def main() -> None:
     youtube_id: Optional[str] = None
     duration: int = 0
     current_step = "init"
+    # Track partial costs so failures still get recorded
+    audio_usage: dict = {}
+    clips_attempted: int = 0
+    clip_paths: list = []
 
     try:
         current_step = "fetch-topic"
@@ -407,7 +414,31 @@ def main() -> None:
         _notify_telegram(current_step, msg)
 
         if topic:
-            step_report(topic, script, None, r2_key, duration, "failed", msg)
+            # Build partial cost metadata — captures whatever was already billed
+            script_usage = (script or {}).get("_usage", {})
+            kling_cost = clips_attempted * 0.70
+            partial_cost = {
+                "claude": {
+                    "input_tokens": script_usage.get("input_tokens", 0),
+                    "output_tokens": script_usage.get("output_tokens", 0),
+                    "cost_usd": script_usage.get("claude_cost_usd", 0),
+                },
+                "elevenlabs": {
+                    "chars": audio_usage.get("chars", 0),
+                    "cost_usd": audio_usage.get("elevenlabs_cost_usd", 0),
+                },
+                "kling": {
+                    "clips": clips_attempted,
+                    "clips_ok": len(clip_paths),
+                    "cost_usd": round(kling_cost, 4),
+                },
+                "total_usd": round(
+                    script_usage.get("claude_cost_usd", 0)
+                    + audio_usage.get("elevenlabs_cost_usd", 0)
+                    + kling_cost, 4
+                ),
+            }
+            step_report(topic, script, None, r2_key, duration, "failed", msg, cost_metadata=partial_cost)
 
         sys.exit(1)
 

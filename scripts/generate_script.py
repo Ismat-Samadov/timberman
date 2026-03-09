@@ -59,7 +59,7 @@ Return ONLY valid JSON — no markdown, no code fences, nothing else:
   ]
 }
 
-Aim for 6-9 segments. Each segment = ~10-15 seconds of speech."""
+Number of segments = floor(target_duration / 10). Strictly follow the segment count in the user prompt. Each segment = exactly 10 seconds of speech."""
 
 
 TONE_INSTRUCTIONS = {
@@ -76,12 +76,14 @@ def generate_script(
     niche: str | None,
     keywords: list[str],
     tone: str = "educational",
-    duration_target: int = 55,
+    duration_target: int = 30,
+    max_segments: int | None = None,
 ) -> dict:
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
     tone_note = TONE_INSTRUCTIONS.get(tone, TONE_INSTRUCTIONS["educational"])
     word_target = int(duration_target * 2.7)  # ~2.7 words/second at natural pace
+    segments_target = max_segments or max(1, round(duration_target / 10))
 
     user_prompt = f"""Topic: {topic_title}
 Niche: {niche or "general"}
@@ -89,6 +91,7 @@ Tone: {tone} — {tone_note}
 Keywords: {", ".join(keywords) if keywords else "none"}
 Context: {topic_description or "none"}
 Target duration: {duration_target}s (~{word_target} words)
+Segments: exactly {segments_target} (one per 10-second clip — do not produce more or fewer)
 
 Write the script now. Return only valid JSON."""
 
