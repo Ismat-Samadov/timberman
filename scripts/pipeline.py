@@ -72,6 +72,7 @@ def load_secrets_from_dashboard() -> None:
 def fetch_pipeline_config() -> dict:
     """Fetch dashboard settings (non-secret config) at startup."""
     defaults = {
+        "schedule_enabled": "true",
         "youtube_visibility": "public",
         "youtube_category_id": "28",
         "youtube_made_for_kids": "false",
