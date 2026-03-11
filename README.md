@@ -87,6 +87,31 @@ Step 8  Report            POST /api/videos/complete → save to DB + notify
 
 The dashboard is **fully responsive** — works on desktop, tablet, and mobile. The sidebar collapses into a slide-in drawer on small screens.
 
+### Screenshots
+
+<table>
+  <tr>
+    <td align="center"><b>Landing</b><br><img src="screens/landing%20page.png" width="380"/></td>
+    <td align="center"><b>Login</b><br><img src="screens/login%20page.png" width="380"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Dashboard Overview</b><br><img src="screens/dashboard%20page.png" width="380"/></td>
+    <td align="center"><b>Topics</b><br><img src="screens/topics%20page.png" width="380"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Videos</b><br><img src="screens/videos%20page.png" width="380"/></td>
+    <td align="center"><b>Pipeline</b><br><img src="screens/pipeline%20page.png" width="380"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Settings</b><br><img src="screens/settings%20page.png" width="380"/></td>
+    <td align="center"><b>Secrets</b><br><img src="screens/secrets%20page.png" width="380"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Storage</b><br><img src="screens/storage%20page.png" width="380"/></td>
+    <td></td>
+  </tr>
+</table>
+
 ---
 
 ## Database Schema
