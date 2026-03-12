@@ -135,9 +135,49 @@ That's it. GitHub Actions needs nothing else — all other API keys are loaded f
 
 ---
 
+## GitHub Actions Compute Limits
+
+The pipeline runs as a GitHub Actions workflow. Here's what to expect on each tier:
+
+| Plan | Free minutes/month | Capacity at ~25 min/run | Cost |
+|------|-------------------|------------------------|------|
+| **GitHub Free** | 2,000 | ~80 videos/month (fine for 1/day) | $0 |
+| **GitHub Pro** | Unlimited | Unlimited | $4/month |
+| **Self-hosted runner** | N/A — no Actions minutes used | Unlimited | VPS cost only |
+
+### Using a self-hosted runner
+
+If you need more than ~80 videos/month:
+
+1. Provision a Ubuntu 22.04 VPS (DigitalOcean, Hetzner, etc.)
+2. Follow [GitHub's runner setup guide](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/adding-self-hosted-runners) to register it with your repo
+3. Install the pipeline's system dependencies on the VPS:
+   ```bash
+   sudo apt-get install -y ffmpeg fonts-dejavu-core fonts-open-sans python3.11 python3-pip
+   ```
+4. Change one line in `.github/workflows/publish.yml`:
+   ```yaml
+   # Before:
+   runs-on: ubuntu-latest
+   # After:
+   runs-on: self-hosted
+   ```
+
+No other changes needed — the pipeline reads config from your Vercel deployment exactly the same way.
+
+---
+
 ## Step 6 — Get Your YouTube Refresh Token
 
-This is a one-time step to connect your YouTube channel. You need Python installed locally.
+This is a one-time step to connect your YouTube channel.
+
+**Option A (recommended) — In-dashboard OAuth flow:**
+
+Once your Vercel deployment is live, go to **Dashboard → YouTube Auth** and click **Connect YouTube Channel**. This handles the full OAuth flow in the browser and saves the refresh token directly to your NeonDB — no local Python needed.
+
+**Option B — Local script (fallback):**
+
+You need Python installed locally.
 
 ### Create a Google Cloud project
 

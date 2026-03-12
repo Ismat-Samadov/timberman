@@ -4,6 +4,8 @@ Autonomous YouTube Shorts generation and publishing platform. Produces cinematic
 
 **Stack:** Next.js 16 · NeonDB · Cloudflare R2 · GitHub Actions · Claude Sonnet · ElevenLabs · Kling 2.6 Pro · FFmpeg · YouTube Data API v3
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Ismat-Samadov/short_publisher&env=DATABASE_URL,PIPELINE_SECRET_KEY,DASHBOARD_PASSWORD,AUTH_TOKEN&envDescription=4%20bootstrap%20variables%20required%20to%20run%20the%20dashboard&envLink=https://github.com/Ismat-Samadov/short_publisher/blob/main/docs/variables/README.md)
+
 ---
 
 ## Architecture Overview
@@ -278,6 +280,16 @@ Go to **GitHub → Settings → Secrets → Actions** and add only 2 secrets:
 | `PIPELINE_SECRET_KEY` | Same value as Vercel |
 
 The workflow file (`.github/workflows/publish.yml`) runs daily at 09:00 UTC. All API keys are fetched from NeonDB at runtime by the pipeline.
+
+#### GitHub Actions compute limits
+
+| Option | Cost | Capacity |
+|---|---|---|
+| GitHub Free | $0 | ~2,000 min/month ≈ 80 videos/month |
+| GitHub Pro | $4/month | Unlimited minutes |
+| Self-hosted runner | VPS cost only | Unlimited, zero Actions minutes |
+
+To use a self-hosted runner: provision a Ubuntu VPS, [install the runner agent](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/adding-self-hosted-runners), then change `runs-on: ubuntu-latest` to `runs-on: self-hosted` in `.github/workflows/publish.yml`.
 
 ### 9. Test with a dry run
 
