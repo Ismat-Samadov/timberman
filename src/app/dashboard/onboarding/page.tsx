@@ -137,7 +137,7 @@ export default function OnboardingPage() {
           <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-700 mb-2 px-1">
             Required
           </h2>
-          <div className="rounded-xl border overflow-hidden divide-y" style={{ background: 'var(--surface)', borderColor: 'var(--border)', '--tw-divide-opacity': 1 } as React.CSSProperties}>
+          <div className="rounded-xl border overflow-hidden divide-y divide-zinc-800" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
             {required.map((check) => (
               <CheckRow key={check.id} check={check} />
             ))}
@@ -151,7 +151,7 @@ export default function OnboardingPage() {
           <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-700 mb-2 px-1">
             Optional
           </h2>
-          <div className="rounded-xl border overflow-hidden divide-y" style={{ background: 'var(--surface)', borderColor: 'var(--border)', '--tw-divide-opacity': 1 } as React.CSSProperties}>
+          <div className="rounded-xl border overflow-hidden divide-y divide-zinc-800" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
             {optional.map((check) => (
               <CheckRow key={check.id} check={check} />
             ))}

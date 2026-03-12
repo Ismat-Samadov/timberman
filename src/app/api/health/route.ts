@@ -71,7 +71,6 @@ async function checkR2(): Promise<HealthCheck> {
       region: 'auto',
       endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
       credentials: { accessKeyId, secretAccessKey: secretKey },
-      requestHandler: { requestTimeout: 8000 } as unknown as undefined,
     });
     await client.send(new ListObjectsV2Command({ Bucket: bucket, MaxKeys: 1 }));
     return { id: 'r2', label: 'Cloudflare R2', status: 'ok', required: true };
