@@ -171,7 +171,7 @@ No other changes needed — the pipeline reads config from your Vercel deploymen
 
 This is a one-time step to connect your YouTube channel.
 
-### Create a Google Cloud project (required for both options)
+### Create a Google Cloud project
 
 1. Go to [console.cloud.google.com](https://console.cloud.google.com).
 2. Create a new project (e.g. `short-publisher`).
@@ -179,54 +179,38 @@ This is a one-time step to connect your YouTube channel.
 4. Go to **APIs & Services** → **OAuth consent screen**:
    - User type: **External**
    - Fill in app name, support email, developer email
-   - Scopes: add both `youtube.upload` and `youtube.readonly`
+   - Scopes: add `https://www.googleapis.com/auth/youtube.upload`
    - Test users: add your Gmail address
    - Save and continue through all steps
-
----
-
-**Option A (recommended) — In-dashboard OAuth flow (no local Python needed):**
-
-1. Go to **APIs & Services** → **Credentials** → **Create Credentials** → **OAuth client ID**:
-   - Application type: **Web application**
-   - Name: anything (e.g. `short-publisher-web`)
-   - Under **Authorized redirect URIs**, add:
-     - `http://localhost:3000/api/auth/youtube/callback` (for local testing)
-     - `https://YOUR-APP.vercel.app/api/auth/youtube/callback` (your exact Vercel URL)
-   - Click **Create**, copy the **Client ID** and **Client Secret**
-
-2. Add them to **Dashboard → Secrets**: `YOUTUBE_CLIENT_ID` and `YOUTUBE_CLIENT_SECRET`
-
-3. Go to **Dashboard → YouTube Auth** and click **Connect YouTube Channel**. You will be redirected to Google, grant permission, and the refresh token is saved directly to NeonDB.
-
-> **Important:** The redirect URI in Google Cloud must exactly match your deployment URL. `https://short-publisher.vercel.app` and `https://short-publisher-abc123.vercel.app` are treated as different URIs.
-
----
-
-**Option B — Local Python script (fallback, works offline):**
-
-1. Go to **APIs & Services** → **Credentials** → **Create Credentials** → **OAuth client ID**:
+5. Go to **APIs & Services** → **Credentials** → **Create Credentials** → **OAuth client ID**:
    - Application type: **Desktop app**
    - Name: anything
-   - Click **Create**, copy `client_id` and `client_secret`
+   - Click Create
+   - Download the JSON (or copy `client_id` and `client_secret`)
 
-2. Add to your `.env.local`:
+### Run the token helper script
+
+The script uses only Python stdlib — no extra packages needed. First, make sure your `.env.local` has:
 
 ```bash
 YOUTUBE_CLIENT_ID=your-client-id
 YOUTUBE_CLIENT_SECRET=your-client-secret
 ```
 
-3. Run:
+Then run:
 
 ```bash
 cd scripts
 python get_youtube_token.py
 ```
 
-It opens a browser, you grant permission, and `YOUTUBE_REFRESH_TOKEN` is written back to `.env.local` automatically.
+It will open a browser window. Log in with the Google account that owns your YouTube channel and grant permission. After completing the OAuth flow, the script automatically writes the token into your `.env.local`:
 
-4. Copy that token value into **Dashboard → Secrets → YOUTUBE_REFRESH_TOKEN**.
+```
+Done! YOUTUBE_REFRESH_TOKEN written to .env.local
+```
+
+Open `.env.local` and copy the `YOUTUBE_REFRESH_TOKEN` value. You'll enter it in the dashboard in the next step.
 
 ---
 

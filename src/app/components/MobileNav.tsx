@@ -17,7 +17,6 @@ import {
   X,
   Radio,
   Rocket,
-  Youtube,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -41,7 +40,6 @@ const navSections = [
     items: [
       { href: '/dashboard/pipeline', label: 'Pipeline', icon: PlayCircle, exact: false },
       { href: '/dashboard/settings', label: 'Settings', icon: Settings, exact: false },
-      { href: '/dashboard/settings/youtube-auth', label: 'YouTube Auth', icon: Youtube, exact: false },
       { href: '/dashboard/secrets', label: 'Secrets', icon: KeyRound, exact: false },
     ],
   },
